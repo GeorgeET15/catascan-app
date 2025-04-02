@@ -22,13 +22,16 @@ const Dashboard = () => {
           return;
         }
 
-        const response = await fetch("http://localhost:5000/profile", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          "https://catascan-app-backend.onrender.com/profile",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         const data = await response.json();
         if (!response.ok) {

@@ -13,13 +13,16 @@ const Reports = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem("access_token");
-        const response = await fetch("http://localhost:5000/scans", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          "https://catascan-app-backend.onrender.com/scans",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
         const data = await response.json();
 
         if (!response.ok) {

@@ -100,14 +100,17 @@ const Onboarding = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/onboarding", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        body: JSON.stringify({ user_id, ...formData, age }), // Include calculated age
-      });
+      const response = await fetch(
+        "https://catascan-app-backend.onrender.com/onboarding",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+          body: JSON.stringify({ user_id, ...formData, age }), // Include calculated age
+        }
+      );
 
       const data = await response.json();
 

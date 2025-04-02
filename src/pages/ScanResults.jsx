@@ -25,7 +25,7 @@ const ScanResults = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/download_report?scanId=${result.scan_id}`,
+        `https://catascan-app-backend.onrender.com/download_report?scanId=${result.scan_id}`,
         {
           method: "GET",
           headers: {

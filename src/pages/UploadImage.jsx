@@ -56,10 +56,13 @@ const UploadImage = () => {
       formData.append("user_id", userId);
 
       console.log("Uploading image to /upload-image...");
-      const uploadResponse = await fetch("http://localhost:5000/upload-image", {
-        method: "POST",
-        body: formData,
-      });
+      const uploadResponse = await fetch(
+        "https://catascan-app-backend.onrender.com/upload-image",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const uploadData = await uploadResponse.json();
       if (!uploadResponse.ok) {
@@ -70,13 +73,16 @@ const UploadImage = () => {
       console.log("Image uploaded successfully:", { image_url, scan_id });
 
       console.log("Sending request to /predict with image URL:", image_url);
-      const predictResponse = await fetch("http://localhost:5000/predict", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ image_url, scan_id, user_id: userId }),
-      });
+      const predictResponse = await fetch(
+        "https://catascan-app-backend.onrender.com/predict",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ image_url, scan_id, user_id: userId }),
+        }
+      );
 
       const predictData = await predictResponse.json();
       if (!predictResponse.ok) {
