@@ -39,42 +39,41 @@ const Reports = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0d2a34] to-[#6d8c94] flex items-center justify-center p-6">
-        <div className="text-[#b3d1d6] text-lg">Loading...</div>
+      <div className="min-h-screen bg-[#0d2a34] flex items-center justify-center">
+        <div className="text-[#b3d1d6] text-xl font-medium animate-pulse">
+          Loading Reports...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0d2a34] to-[#6d8c94] flex flex-col items-center p-6">
-      <div className="w-full bg-[#1a3c40]/80 backdrop-blur-xl h-32 rounded-b-2xl flex items-center justify-center shadow-lg border-b border-[#b3d1d6]/20">
-        <h1 className="text-3xl font-bold text-[#b3d1d6] tracking-tight">
+    <div className="min-h-screen bg-[#0d2a34] flex flex-col">
+      <header className="fixed top-0 left-0 right-0 bg-[#1a3c40]/80 backdrop-blur-xl h-15 sm:h-32 flex items-center justify-center shadow-lg border-b border-[#b3d1d6]/20 z-10">
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#b3d1d6] tracking-tight">
           Reports
-        </h1>
-      </div>
+        </h2>
+      </header>
 
-      <div className="bg-[#1a3c40]/80 backdrop-blur-xl p-6 mt-8 w-full max-w-md rounded-2xl shadow-lg border border-[#b3d1d6]/20">
-        {reports.length === 0 ? (
-          <p className="text-[#b3d1d6] text-center">No reports available.</p>
-        ) : (
-          reports.map((report) => (
-            <div
-              key={report.scan_id}
-              className="flex items-center justify-between bg-[#6d8c94]/20 p-4 rounded-xl mb-4 shadow-md hover:bg-[#6d8c94]/30 transition-colors duration-200"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-[#b3d1d6] text-xl">📄</span>
-                <div>
-                  <h2 className="text-lg font-semibold text-white">
-                    Scan {report.scan_id.slice(0, 8)}
-                  </h2>
-                  <p className="text-sm text-[#b3d1d6]/80">
-                    {report.created_at}
-                  </p>
-                </div>
-              </div>
-              <span
-                className="text-[#b3d1d6] text-xl cursor-pointer"
+      <main className="flex-grow pt-20 sm:pt-36 pb-25 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md mx-auto">
+          {reports.length === 0 ? (
+            <div className="bg-[#1a3c40]/50 rounded-lg p-6 text-center">
+              <p className="text-[#b3d1d6] text-lg font-medium">
+                No reports available.
+              </p>
+              <button
+                onClick={() => navigate("/upload-image")}
+                className="mt-4 inline-block bg-[#b3d1d6] text-[#0d2a34] px-4 py-2 rounded-full font-semibold hover:bg-[#a1c3c8] transition-colors"
+              >
+                Upload Now
+              </button>
+            </div>
+          ) : (
+            reports.map((report) => (
+              <div
+                key={report.scan_id}
+                className="bg-[#1a3c40]/70 hover:bg-[#1a3c40]/90 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 shadow-md transition-colors duration-200 cursor-pointer border border-[#b3d1d6]/10"
                 onClick={() =>
                   navigate("/scan-results", {
                     state: {
@@ -93,12 +92,34 @@ const Reports = () => {
                   })
                 }
               >
-                ⋮
-              </span>
-            </div>
-          ))
-        )}
-      </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <span className="text-[#b3d1d6] text-lg sm:text-xl">
+                      📄
+                    </span>
+                    <div>
+                      <h2 className="text-base sm:text-lg font-semibold text-white">
+                        Scan {report.scan_id.slice(0, 8)}
+                      </h2>
+                      <p className="text-xs sm:text-sm text-[#b3d1d6]/70">
+                        {new Date(report.created_at).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[#b3d1d6] text-lg sm:text-xl">⋮</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </main>
 
       <Navbar />
     </div>

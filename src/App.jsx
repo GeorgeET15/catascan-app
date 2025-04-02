@@ -13,6 +13,7 @@ import Reports from "./pages/Reports";
 import ScanResults from "./pages/ScanResults";
 import Onboarding from "./pages/Onboarding";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Insight from "./pages/Insight";
 
 function App() {
   return (
@@ -75,6 +76,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ScanResults />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/insight"
+          element={
+            <ProtectedRoute>
+              <Insight />
             </ProtectedRoute>
           }
         />

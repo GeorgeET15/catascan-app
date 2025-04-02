@@ -16,11 +16,10 @@ const ScanResults = () => {
       return;
     }
 
-    // Retrieve the access token from localStorage
     const token = localStorage.getItem("access_token");
     if (!token) {
       console.error("No access token found. Please sign in again.");
-      navigate("/signin"); // Redirect to sign-in if no token
+      navigate("/signin");
       return;
     }
 
@@ -30,7 +29,7 @@ const ScanResults = () => {
         {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`, // Include the token
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -40,22 +39,21 @@ const ScanResults = () => {
         throw new Error(errorData.error || "Failed to download report");
       }
 
-      // Handle the PDF response
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `catascan_report_${result.scan_id}.pdf`; // Match backend filename
+      link.download = `catascan_report_${result.scan_id}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url); // Clean up
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading report:", error.message);
       alert("Failed to download report: " + error.message);
     }
   };
-
+  result.severity = capitalize(result.severity);
   if (!state?.result) {
     return (
       <div className="min-h-screen bg-[#0d2a34] text-white flex items-center justify-center p-6">
@@ -84,7 +82,7 @@ const ScanResults = () => {
           <div className="flex justify-between">
             <span className="font-medium">Prediction</span>
             <span className="font-bold text-[#b3d1d6]">
-              {result.prediction}
+              {result.prediction === "normal" ? "No Cataract" : "Cataract"}
             </span>
           </div>
           <div className="flex justify-between items-center">
@@ -103,9 +101,9 @@ const ScanResults = () => {
             <span className="font-medium">Severity</span>
             <span
               className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                result.severity === "None"
+                result.severity === "normal"
                   ? "bg-green-500/20 text-green-300"
-                  : result.severity === "Mild to Moderate"
+                  : result.severity === "immature"
                   ? "bg-yellow-500/20 text-yellow-300"
                   : "bg-red-500/20 text-red-300"
               }`}
@@ -119,12 +117,14 @@ const ScanResults = () => {
               {result.feedback}
             </p>
           </div>
-          <div>
-            <span className="font-medium block mb-2">Recommendation</span>
-            <p className="bg-[#6d8c94]/20 p-3 rounded-xl text-sm">
-              {result.recommendation}
-            </p>
-          </div>
+          {result.recommendation && result.recommendation !== "N/A" && (
+            <div>
+              <span className="font-medium block mb-2">Recommendation</span>
+              <p className="bg-[#6d8c94]/20 p-3 rounded-xl text-sm">
+                {result.recommendation}
+              </p>
+            </div>
+          )}
         </div>
 
         <button

@@ -17,7 +17,7 @@ const UploadImage = () => {
       setUserId(storedUserId);
     } else {
       toast.error("No user ID found. Please sign in or sign up.");
-      navigate("/signin"); // Redirect to signin if no user_id
+      navigate("/signin");
     }
   }, [navigate]);
 
@@ -30,9 +30,18 @@ const UploadImage = () => {
     setSelectedImage(file);
   };
 
+  const handleCameraCapture = (event) => {
+    const file = event.target.files[0];
+    if (file && !file.type.startsWith("image/")) {
+      toast.error("Please capture an image");
+      return;
+    }
+    setSelectedImage(file);
+  };
+
   const handleScan = async () => {
     if (!selectedImage) {
-      toast.error("Please upload an image first!");
+      toast.error("Please upload or capture an image first!");
       return;
     }
     if (!userId) {
@@ -42,10 +51,9 @@ const UploadImage = () => {
 
     setLoading(true);
     try {
-      // Step 1: Upload the image to Supabase Storage
       const formData = new FormData();
       formData.append("file", selectedImage);
-      formData.append("user_id", userId); // Send user_id with form data
+      formData.append("user_id", userId);
 
       console.log("Uploading image to /upload-image...");
       const uploadResponse = await fetch("http://localhost:5000/upload-image", {
@@ -61,7 +69,6 @@ const UploadImage = () => {
       const { image_url, scan_id } = uploadData;
       console.log("Image uploaded successfully:", { image_url, scan_id });
 
-      // Step 2: Call /predict with the image URL, scan ID, and user_id
       console.log("Sending request to /predict with image URL:", image_url);
       const predictResponse = await fetch("http://localhost:5000/predict", {
         method: "POST",
@@ -89,18 +96,19 @@ const UploadImage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d2a34] flex flex-col items-center justify-center p-6">
-      <h1 className="text-2xl font-semibold text-[#b3d1d6] mb-8 tracking-wide">
+    <div className="min-h-screen bg-[#0d2a34] flex flex-col items-center justify-center px-4 py-6">
+      <h1 className="text-2xl sm:text-2xl font-semibold text-[#b3d1d6] mb-6 sm:mb-8 tracking-wide text-center">
         Upload Your Eye Image
       </h1>
 
-      <div className="bg-[#1a3c40]/80 backdrop-blur-xl p-6 rounded-2xl w-full max-w-sm shadow-lg border border-[#b3d1d6]/20">
-        <div className="w-full h-64 bg-[#6d8c94]/20 rounded-xl flex items-center justify-center overflow-hidden relative">
+      <div className="bg-[#1a3c40]/80 backdrop-blur-xl p-4 sm:p-6 rounded-2xl w-full max-w-xs sm:max-w-sm md:max-w-md shadow-lg border border-[#b3d1d6]/20">
+        {/* Image Container */}
+        <div className="w-full h-52 sm:h-64 md:h-72 bg-[#6d8c94]/20 rounded-xl flex items-center justify-center overflow-hidden relative">
           {selectedImage ? (
             <>
               <img
                 src={URL.createObjectURL(selectedImage)}
-                alt="Uploaded"
+                alt="Uploaded or Captured"
                 className="w-full h-full object-cover"
               />
               <button
@@ -112,23 +120,39 @@ const UploadImage = () => {
             </>
           ) : (
             <div className="text-[#b3d1d6] flex flex-col items-center gap-2">
-              <FaCamera size={32} />
+              <FaCamera size={28} />
               <span className="text-sm">No Image Selected</span>
             </div>
           )}
         </div>
 
-        <label className="mt-6 bg-[#b3d1d6] text-[#0d2a34] w-full py-3 rounded-xl flex items-center justify-center gap-2 font-semibold hover:bg-[#a1c3c8] transition-colors cursor-pointer">
-          <FaUpload size={18} />
-          Upload Image
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-        </label>
+        {/* Upload & Camera Buttons */}
+        <div className="mt-6 flex flex-col sm:flex-row gap-2 sm:gap-4">
+          <label className="flex-1 bg-[#b3d1d6] text-[#0d2a34] py-3 rounded-xl flex items-center justify-center gap-2 font-semibold hover:bg-[#a1c3c8] transition-colors cursor-pointer">
+            <FaUpload size={18} />
+            <span>Upload Image</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </label>
 
+          <label className="flex-1 bg-[#b3d1d6] text-[#0d2a34] py-3 rounded-xl flex items-center justify-center gap-2 font-semibold hover:bg-[#a1c3c8] transition-colors cursor-pointer">
+            <FaCamera size={18} />
+            <span>Take Photo</span>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleCameraCapture}
+            />
+          </label>
+        </div>
+
+        {/* Scan Button */}
         <button
           onClick={handleScan}
           disabled={loading || !userId}
@@ -141,6 +165,7 @@ const UploadImage = () => {
           {loading ? "Scanning..." : "Scan Now"}
         </button>
       </div>
+
       <Navbar />
     </div>
   );

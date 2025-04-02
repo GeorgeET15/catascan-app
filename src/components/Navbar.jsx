@@ -7,7 +7,6 @@ const Navbar = () => {
   const navItems = [
     { path: "/dashboard", icon: <Home size={24} />, label: "Home" },
     { path: "/reports", icon: <FileText size={24} />, label: "Reports" },
-    { path: "/settings", icon: <Settings size={24} />, label: "Settings" },
     { path: "/profile", icon: <User size={24} />, label: "Profile" },
   ];
 
