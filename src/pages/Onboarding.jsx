@@ -13,6 +13,7 @@ const Onboarding = () => {
   });
   const [error, setError] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
+  const [loading, setLoading] = useState(false); // Added loading state for submission
 
   // Calculate age from DOB
   const calculateAge = (dob) => {
@@ -43,7 +44,6 @@ const Onboarding = () => {
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          // Use OpenStreetMap's Nominatim API for reverse geocoding
           const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
           );
@@ -71,7 +71,6 @@ const Onboarding = () => {
     );
   };
 
-  // Automatically fetch location when component mounts
   useEffect(() => {
     fetchLocation();
   }, []);
@@ -99,6 +98,7 @@ const Onboarding = () => {
       return;
     }
 
+    setLoading(true); // Start loading
     try {
       const response = await fetch(
         "https://catascan-app-backend.onrender.com/onboarding",
@@ -108,7 +108,7 @@ const Onboarding = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
-          body: JSON.stringify({ user_id, ...formData, age }), // Include calculated age
+          body: JSON.stringify({ user_id, ...formData, age }),
         }
       );
 
@@ -122,6 +122,8 @@ const Onboarding = () => {
     } catch (err) {
       setError(err.message || "An error occurred during onboarding.");
       toast.error(err.message || "Onboarding failed.");
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -200,10 +202,10 @@ const Onboarding = () => {
 
           <button
             type="submit"
+            disabled={loading || loadingLocation} // Disable during submission or location fetch
             className="w-full p-3 bg-[#b3d1d6] text-[#0d2a34] rounded-xl font-semibold hover:bg-[#a1c3c8] transition-all duration-200 shadow-md"
-            disabled={loadingLocation}
           >
-            Complete Profile
+            {loading ? "Saving..." : "Complete Profile"}
           </button>
         </form>
       </div>

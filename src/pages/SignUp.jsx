@@ -9,6 +9,7 @@ const SignUp = () => {
     password: "",
   });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // Added loading state
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,6 +24,7 @@ const SignUp = () => {
       return;
     }
 
+    setLoading(true); // Start loading
     try {
       const response = await fetch(
         "https://catascan-app-backend.onrender.com/signup",
@@ -48,6 +50,8 @@ const SignUp = () => {
     } catch (err) {
       setError(err.message || "An error occurred during sign-up.");
       toast.error(err.message || "Sign-up failed.");
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -87,9 +91,10 @@ const SignUp = () => {
 
           <button
             type="submit"
+            disabled={loading} // Disable button while loading
             className="w-full p-3 bg-[#b3d1d6] text-[#0d2a34] rounded-xl font-semibold hover:bg-[#a1c3c8] transition-all duration-200 shadow-md"
           >
-            Sign Up
+            {loading ? "Signing Up..." : "Sign Up"}
           </button>
 
           <p className="text-[#b3d1d6] text-sm text-center">

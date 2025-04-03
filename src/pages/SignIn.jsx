@@ -5,6 +5,7 @@ const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // Added loading state
   const navigate = useNavigate();
 
   const handleSignIn = async (e) => {
@@ -14,6 +15,7 @@ const SignIn = () => {
       return;
     }
 
+    setLoading(true); // Start loading
     try {
       const response = await fetch(
         "https://catascan-app-backend.onrender.com/signin",
@@ -37,6 +39,8 @@ const SignIn = () => {
       navigate("/signinsuccess");
     } catch (err) {
       setError(err.message || "An error occurred during sign-in.");
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -72,9 +76,10 @@ const SignIn = () => {
 
           <button
             type="submit"
+            disabled={loading} // Disable button while loading
             className="w-full p-3 bg-[#b3d1d6] text-[#0d2a34] rounded-xl font-semibold hover:bg-[#a1c3c8] transition-all duration-200 shadow-md"
           >
-            Sign In
+            {loading ? "Signing In..." : "Sign In"}
           </button>
 
           <p className="text-[#b3d1d6] text-sm text-center">
