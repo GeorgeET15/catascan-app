@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaDownload, FaEye } from "react-icons/fa";
 import Navbar from "../components/Navbar";
@@ -7,6 +7,7 @@ const ScanResults = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const result = state?.result || {};
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const capitalize = (str) => str?.charAt(0).toUpperCase() + str?.slice(1);
 
@@ -22,6 +23,8 @@ const ScanResults = () => {
       navigate("/signin");
       return;
     }
+
+    setIsDownloading(true); // Set downloading state
 
     try {
       const response = await fetch(
@@ -51,8 +54,11 @@ const ScanResults = () => {
     } catch (error) {
       console.error("Error downloading report:", error.message);
       alert("Failed to download report: " + error.message);
+    } finally {
+      setIsDownloading(false); // Reset downloading state
     }
   };
+
   result.severity = capitalize(result.severity);
   if (!state?.result) {
     return (
@@ -130,8 +136,9 @@ const ScanResults = () => {
         <button
           onClick={handleDownloadPDF}
           className="mt-6 w-full bg-[#b3d1d6] text-[#0d2a34] py-3 rounded-xl flex items-center justify-center gap-2 font-semibold hover:bg-[#a1c3c8] transition-colors"
+          disabled={isDownloading}
         >
-          <FaDownload /> Download Report
+          <FaDownload /> {isDownloading ? "Downloading..." : "Download Report"}
         </button>
       </div>
       <Navbar />

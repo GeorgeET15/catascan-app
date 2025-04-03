@@ -1,16 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaCamera, FaUpload, FaTimes } from "react-icons/fa";
 import { toast } from "react-toastify";
+import ReactCrop from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 import Navbar from "../components/Navbar";
 
 const UploadImage = () => {
   const navigate = useNavigate();
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null); // Final cropped image
+  const [imageSrc, setImageSrc] = useState(null); // Original image for cropping
+  const [crop, setCrop] = useState({ unit: "%", width: 50, aspect: 1 }); // Initial crop
+  const [completedCrop, setCompletedCrop] = useState(null);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const [zoom, setZoom] = useState(1); // Default zoom
+  const imgRef = useRef(null);
 
-  // Retrieve user_id from localStorage on component mount
   useEffect(() => {
     const storedUserId = localStorage.getItem("user_id");
     if (storedUserId) {
@@ -27,7 +34,9 @@ const UploadImage = () => {
       toast.error("Please select an image file");
       return;
     }
-    setSelectedImage(file);
+    setImageSrc(URL.createObjectURL(file));
+    setShowCropper(true);
+    setZoom(1); // Reset zoom when new image is loaded
   };
 
   const handleCameraCapture = (event) => {
@@ -36,12 +45,52 @@ const UploadImage = () => {
       toast.error("Please capture an image");
       return;
     }
-    setSelectedImage(file);
+    setImageSrc(URL.createObjectURL(file));
+    setShowCropper(true);
+    setZoom(1); // Reset zoom when new image is loaded
+  };
+
+  const getCroppedImg = async (image, crop) => {
+    const canvas = document.createElement("canvas");
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    canvas.width = crop.width * scaleX;
+    canvas.height = crop.height * scaleY;
+    const ctx = canvas.getContext("2d");
+
+    ctx.drawImage(
+      image,
+      crop.x * scaleX,
+      crop.y * scaleY,
+      crop.width * scaleX,
+      crop.height * scaleY,
+      0,
+      0,
+      crop.width * scaleX,
+      crop.height * scaleY
+    );
+
+    console.log("Cropped dimensions:", canvas.width, canvas.height); // Debug log
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(new File([blob], "cropped.jpg", { type: "image/jpeg" }));
+      }, "image/jpeg");
+    });
+  };
+
+  const handleCropComplete = async () => {
+    if (completedCrop && imgRef.current) {
+      const croppedImage = await getCroppedImg(imgRef.current, completedCrop);
+      setSelectedImage(croppedImage);
+      setShowCropper(false);
+      setZoom(1); // Reset zoom after cropping
+    }
   };
 
   const handleScan = async () => {
     if (!selectedImage) {
-      toast.error("Please upload or capture an image first!");
+      toast.error("Please upload or capture and crop an image first!");
       return;
     }
     if (!userId) {
@@ -55,7 +104,7 @@ const UploadImage = () => {
       formData.append("file", selectedImage);
       formData.append("user_id", userId);
 
-      console.log("Uploading image to /upload-image...");
+      console.log("Uploading cropped image to /upload-image...");
       const uploadResponse = await fetch(
         "https://catascan-app-backend.onrender.com/upload-image",
         {
@@ -110,66 +159,132 @@ const UploadImage = () => {
       <div className="bg-[#1a3c40]/80 backdrop-blur-xl p-4 sm:p-6 rounded-2xl w-full max-w-xs sm:max-w-sm md:max-w-md shadow-lg border border-[#b3d1d6]/20">
         {/* Image Container */}
         <div className="w-full h-52 sm:h-64 md:h-72 bg-[#6d8c94]/20 rounded-xl flex items-center justify-center overflow-hidden relative">
-          {selectedImage ? (
+          {showCropper && imageSrc ? (
+            <div className="relative w-full h-full flex items-center justify-center">
+              <ReactCrop
+                crop={crop}
+                onChange={(_, percentCrop) => setCrop(percentCrop)}
+                onComplete={(c) => setCompletedCrop(c)}
+                aspect={1}
+                className="flex items-center justify-center"
+              >
+                <img
+                  ref={imgRef}
+                  src={imageSrc}
+                  alt="Crop me"
+                  style={{
+                    transform: `scale(${zoom})`,
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                  }}
+                  className="object-contain"
+                  onLoad={(e) => (imgRef.current = e.target)}
+                />
+              </ReactCrop>
+              {/* Circular Overlay */}
+              <div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                style={{ opacity: 0.5 }}
+              >
+                <svg width="50%" height="50%" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="none"
+                    stroke="#b3d1d6"
+                    strokeWidth="2"
+                  />
+                </svg>
+              </div>
+            </div>
+          ) : selectedImage ? (
             <>
               <img
                 src={URL.createObjectURL(selectedImage)}
-                alt="Uploaded or Captured"
+                alt="Cropped"
                 className="w-full h-full object-cover"
               />
               <button
-                onClick={() => setSelectedImage(null)}
+                onClick={() => {
+                  setSelectedImage(null);
+                  setImageSrc(null);
+                }}
                 className="absolute top-2 right-2 bg-[#b3d1d6] text-[#0d2a34] p-2 rounded-full hover:bg-[#a1c3c8] transition-colors"
               >
-                <FaTimes size={16} />
+                <FaTimes size={16} color="#0d2a34" />
               </button>
             </>
           ) : (
             <div className="text-[#b3d1d6] flex flex-col items-center gap-2">
-              <FaCamera size={28} />
+              <FaCamera size={28} color="#b3d1d6" />
               <span className="text-sm">No Image Selected</span>
             </div>
           )}
         </div>
 
-        {/* Upload & Camera Buttons */}
-        <div className="mt-6 flex flex-col sm:flex-row gap-2 sm:gap-4">
-          <label className="flex-1 bg-[#b3d1d6] text-[#0d2a34] py-3 rounded-xl flex items-center justify-center gap-2 font-semibold hover:bg-[#a1c3c8] transition-colors cursor-pointer">
-            <FaUpload size={18} />
-            <span>Upload Image</span>
+        {showCropper && (
+          <div className="mt-4">
             <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
+              type="range"
+              min="0.5" // Allow zooming out
+              max="3"
+              step="0.1"
+              value={zoom}
+              onChange={(e) => setZoom(parseFloat(e.target.value))}
+              className="w-full"
             />
-          </label>
+            <button
+              onClick={handleCropComplete}
+              className="mt-2 w-full bg-[#b3d1d6] text-[#0d2a34] py-2 rounded-xl font-semibold hover:bg-[#a1c3c8] transition-colors"
+            >
+              Apply Crop
+            </button>
+          </div>
+        )}
 
-          <label className="flex-1 bg-[#b3d1d6] text-[#0d2a34] py-3 rounded-xl flex items-center justify-center gap-2 font-semibold hover:bg-[#a1c3c8] transition-colors cursor-pointer">
-            <FaCamera size={18} />
-            <span>Take Photo</span>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={handleCameraCapture}
-            />
-          </label>
-        </div>
+        {/* Upload & Camera Buttons */}
+        {!showCropper && !selectedImage && (
+          <div className="mt-6 flex flex-col sm:flex-row gap-2 sm:gap-4">
+            <label className="flex-1 bg-[#b3d1d6] text-[#0d2a34] py-3 rounded-xl flex items-center justify-center gap-2 font-semibold hover:bg-[#a1c3c8] transition-colors cursor-pointer">
+              <FaUpload size={18} color="#0d2a34" />
+              <span>Upload Image</span>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </label>
+
+            <label className="flex-1 bg-[#b3d1d6] text-[#0d2a34] py-3 rounded-xl flex items-center justify-center gap-2 font-semibold hover:bg-[#a1c3c8] transition-colors cursor-pointer">
+              <FaCamera size={18} color="#0d2a34" />
+              <span>Take Photo</span>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={handleCameraCapture}
+              />
+            </label>
+          </div>
+        )}
 
         {/* Scan Button */}
-        <button
-          onClick={handleScan}
-          disabled={loading || !userId}
-          className={`mt-4 w-full py-3 rounded-xl font-semibold text-white ${
-            loading || !userId
-              ? "bg-[#6d8c94]/50 cursor-not-allowed"
-              : "bg-[#1a3c40] hover:bg-[#145c5a] transition-colors"
-          }`}
-        >
-          {loading ? "Scanning..." : "Scan Now"}
-        </button>
+        {!showCropper && selectedImage && (
+          <button
+            onClick={handleScan}
+            disabled={loading || !userId}
+            className={`mt-4 w-full py-3 rounded-xl font-semibold text-white ${
+              loading || !userId
+                ? "bg-[#6d8c94]/50 cursor-not-allowed"
+                : "bg-[#1a3c40] hover:bg-[#145c5a] transition-colors"
+            }`}
+          >
+            {loading ? "Scanning..." : "Scan Now"}
+          </button>
+        )}
       </div>
 
       <Navbar />
