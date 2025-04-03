@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Eye, EyeOff } from "lucide-react"; // Import Lucide icons
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -9,7 +10,8 @@ const SignUp = () => {
     password: "",
   });
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // Added loading state
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // State for password visibility
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,7 +26,7 @@ const SignUp = () => {
       return;
     }
 
-    setLoading(true); // Start loading
+    setLoading(true);
     try {
       const response = await fetch(
         "https://catascan-app-backend.onrender.com/signup",
@@ -51,7 +53,7 @@ const SignUp = () => {
       setError(err.message || "An error occurred during sign-up.");
       toast.error(err.message || "Sign-up failed.");
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
@@ -75,9 +77,9 @@ const SignUp = () => {
             />
           </div>
 
-          <div>
+          <div className="relative">
             <input
-              type="password"
+              type={showPassword ? "text" : "password"} // Toggle between text and password
               name="password"
               value={formData.password}
               onChange={handleChange}
@@ -85,13 +87,23 @@ const SignUp = () => {
               className="w-full p-3 bg-[#6d8c94]/20 text-white placeholder-[#b3d1d6]/50 rounded-xl border border-[#b3d1d6]/20 focus:outline-none focus:ring-2 focus:ring-[#b3d1d6] transition-all"
               required
             />
+            <span
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#b3d1d6] cursor-pointer hover:text-white transition-colors"
+            >
+              {showPassword ? (
+                <EyeOff size={20} /> // Icon when password is visible
+              ) : (
+                <Eye size={20} /> // Icon when password is hidden
+              )}
+            </span>
           </div>
 
           {error && <p className="text-red-400 text-sm text-center">{error}</p>}
 
           <button
             type="submit"
-            disabled={loading} // Disable button while loading
+            disabled={loading}
             className="w-full p-3 bg-[#b3d1d6] text-[#0d2a34] rounded-xl font-semibold hover:bg-[#a1c3c8] transition-all duration-200 shadow-md"
           >
             {loading ? "Signing Up..." : "Sign Up"}
