@@ -7,7 +7,7 @@
   "theme_color": "#0d2a34",
   "icons": [
     {
-      "src": "/vite.svg",
+      "src": "./CataScan.png",
       "sizes": "192x192",
       "type": "image/svg+xml"
     }
