@@ -3,16 +3,33 @@ import { MapPin } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { toast } from "react-toastify";
 
-const hospitalIcon = new L.Icon({
-  iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+import red_hospital from "../assets/red_hospital.png";
+import blue_hospital from "../assets/blue_hospital.png";
+import my_loc from "../assets/image.png";
+
+// Custom User Icon (Green-tinted marker)
+const userIcon = new L.Icon({
+  iconUrl: my_loc,
   iconSize: [32, 32],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
 });
 
-const clinicIcon = new L.Icon({
-  iconUrl: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+// Custom Hospital Icon (Red hospital symbol from Flaticon)
+const hospitalIcon = new L.Icon({
+  iconUrl: red_hospital,
   iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
+});
+
+// Custom Clinic Icon (Blue eye symbol from Flaticon)
+const clinicIcon = new L.Icon({
+  iconUrl: blue_hospital,
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
 });
 
 const NearbyEyeCareFacilities = () => {
@@ -25,28 +42,49 @@ const NearbyEyeCareFacilities = () => {
   const getUserLocation = () => {
     if (!navigator.geolocation) {
       setErrorFacilities("Geolocation is not supported by your browser.");
-      toast.error("Geolocation is not supported.");
+      return;
+    }
+
+    if (
+      window.location.protocol !== "https:" &&
+      window.location.hostname !== "localhost"
+    ) {
+      setErrorFacilities("Geolocation requires a secure connection (HTTPS).");
       return;
     }
 
     setLoadingFacilities(true);
+    setErrorFacilities("");
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         });
+        setLoadingFacilities(false);
       },
       (err) => {
-        setErrorFacilities(
-          "Failed to get location. Please allow location access."
-        );
-        toast.error("Failed to get location: " + err.message);
+        let errorMessage = "Failed to get location. ";
+        switch (err.code) {
+          case err.PERMISSION_DENIED:
+            errorMessage +=
+              "Please allow location access in your browser settings.";
+            break;
+          case err.POSITION_UNAVAILABLE:
+            errorMessage += "Location information is unavailable.";
+            break;
+          case err.TIMEOUT:
+            errorMessage += "The request timed out. Try again.";
+            break;
+          default:
+            errorMessage += err.message;
+        }
+        setErrorFacilities(errorMessage);
         setLoadingFacilities(false);
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 15000,
         maximumAge: 0,
       }
     );
@@ -93,11 +131,9 @@ const NearbyEyeCareFacilities = () => {
         setEyeCareFacilities(facilities);
       } else {
         setErrorFacilities("No eye care facilities found within 10km.");
-        toast.warn("No eye care centers found nearby.");
       }
     } catch (err) {
       setErrorFacilities("Failed to fetch facilities: " + err.message);
-      toast.error("Failed to fetch facilities: " + err.message);
     } finally {
       setLoadingFacilities(false);
     }
@@ -116,25 +152,37 @@ const NearbyEyeCareFacilities = () => {
   return (
     <div className="mt-10 w-full max-w-5xl pb-25 z-0">
       <h2 className="text-2xl font-semibold text-[#b3d1d6] mb-6 flex items-center gap-2">
-        Nearby Eye Care Facilities
+        <MapPin size={24} /> Nearby Eye Care Facilities
       </h2>
 
       {loadingFacilities && (
         <p className="text-center text-[#b3d1d6]/70">Loading facilities...</p>
       )}
       {errorFacilities && (
-        <p className="text-red-400 text-center mb-6">{errorFacilities}</p>
+        <div className="text-center mb-6">
+          <p className="text-red-400">{errorFacilities}</p>
+          <button
+            onClick={getUserLocation}
+            className="mt-4 bg-[#b3d1d6] text-[#0d2a34] py-2 px-4 rounded-xl font-semibold hover:bg-[#a1c3c8] transition-colors"
+          >
+            Retry Location Fetch
+          </button>
+        </div>
       )}
 
-      {location && (
+      {location && !errorFacilities && (
         <MapContainer
           center={[location.lat, location.lng]}
           zoom={12}
           className="h-96 w-full rounded-lg"
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          <Marker position={[location.lat, location.lng]}>
-            <Popup>Your Location</Popup>
+          <Marker position={[location.lat, location.lng]} icon={userIcon}>
+            <Popup>
+              <strong>You are here</strong>
+              <br />
+              Lat: {location.lat.toFixed(4)}, Lng: {location.lng.toFixed(4)}
+            </Popup>
           </Marker>
           {eyeCareFacilities.map((facility) => (
             <Marker
@@ -143,15 +191,49 @@ const NearbyEyeCareFacilities = () => {
               icon={facility.type === "hospital" ? hospitalIcon : clinicIcon}
             >
               <Popup>
-                <strong>{facility.name}</strong>
-                <br /> {facility.address}
-                <br /> Type:{" "}
-                {facility.type === "hospital" ? "Hospital" : "Clinic"}
+                <div className="flex flex-col gap-2">
+                  <strong>{facility.name}</strong>
+                  <span>{facility.address}</span>
+                  <span>
+                    Type: {facility.type === "hospital" ? "Hospital" : "Clinic"}
+                  </span>
+                  <button
+                    onClick={() => {
+                      // Encode the facility name to handle special characters
+                      const encodedName = encodeURIComponent(facility.name);
+                      // Optional: Include address for more precise results
+                      const query =
+                        facility.address !== "Address not specified"
+                          ? `${encodedName}, ${encodeURIComponent(
+                              facility.address
+                            )}`
+                          : encodedName;
+                      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+                      window.open(googleMapsUrl, "_blank");
+                    }}
+                    className="mt-2 bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition-colors"
+                  >
+                    Go Here
+                  </button>
+                </div>
               </Popup>
             </Marker>
           ))}
         </MapContainer>
       )}
+
+      {/* CSS to tint the user icon green */}
+      <style>
+        {`
+          .user-icon {
+            filter: hue-rotate(120deg); /* Green tint */
+          }
+          .custom-user-icon {
+            background: none; /* Remove default Leaflet divIcon background */
+            border: none;
+          }
+        `}
+      </style>
     </div>
   );
 };

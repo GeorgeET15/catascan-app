@@ -136,6 +136,12 @@ const Onboarding = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
+            <label
+              htmlFor="dob"
+              className="block text-[#b3d1d6] text-sm font-medium mb-1"
+            >
+              First Name
+            </label>
             <input
               type="text"
               name="first_name"
@@ -148,6 +154,12 @@ const Onboarding = () => {
           </div>
 
           <div>
+            <label
+              htmlFor="dob"
+              className="block text-[#b3d1d6] text-sm font-medium mb-1"
+            >
+              Last Name
+            </label>
             <input
               type="text"
               name="last_name"
@@ -160,6 +172,12 @@ const Onboarding = () => {
           </div>
 
           <div>
+            <label
+              htmlFor="dob"
+              className="block text-[#b3d1d6] text-sm font-medium mb-1"
+            >
+              Gender
+            </label>
             <select
               name="gender"
               value={formData.gender}
@@ -175,17 +193,30 @@ const Onboarding = () => {
           </div>
 
           <div>
+            <label
+              htmlFor="dob"
+              className="block text-[#b3d1d6] text-sm font-medium mb-1"
+            >
+              Date of Birth
+            </label>
             <input
               type="date"
+              id="dob"
               name="dob"
               value={formData.dob}
               onChange={handleChange}
-              className="w-full p-3 bg-[#6d8c94]/20 text-white placeholder-[#b3d1d6]/50 rounded-xl border border-[#b3d1d6]/20 focus:outline-none focus:ring-2 focus:ring-[#b3d1d6] transition-all"
+              className="w-full p-3 bg-[#6d8c94]/20 text-white rounded-xl border border-[#b3d1d6]/20 focus:outline-none focus:ring-2 focus:ring-[#b3d1d6] transition-all"
               required
             />
           </div>
 
           <div>
+            <label
+              htmlFor="dob"
+              className="block text-[#b3d1d6] text-sm font-medium mb-1"
+            >
+              Address
+            </label>
             <input
               type="text"
               name="address"

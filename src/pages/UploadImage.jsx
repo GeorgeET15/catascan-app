@@ -50,27 +50,34 @@ const UploadImage = () => {
     setZoom(1); // Reset zoom when new image is loaded
   };
 
-  const getCroppedImg = async (image, crop) => {
+  const getCroppedImg = async (image, crop, zoomLevel) => {
     const canvas = document.createElement("canvas");
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
-    canvas.width = crop.width * scaleX;
-    canvas.height = crop.height * scaleY;
+
+    // Adjust crop coordinates and dimensions based on zoom
+    const adjustedCropX = (crop.x * scaleX) / zoomLevel;
+    const adjustedCropY = (crop.y * scaleY) / zoomLevel;
+    const adjustedCropWidth = (crop.width * scaleX) / zoomLevel;
+    const adjustedCropHeight = (crop.height * scaleY) / zoomLevel;
+
+    canvas.width = adjustedCropWidth;
+    canvas.height = adjustedCropHeight;
     const ctx = canvas.getContext("2d");
 
     ctx.drawImage(
       image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
+      adjustedCropX,
+      adjustedCropY,
+      adjustedCropWidth,
+      adjustedCropHeight,
       0,
       0,
-      crop.width * scaleX,
-      crop.height * scaleY
+      adjustedCropWidth,
+      adjustedCropHeight
     );
 
-    console.log("Cropped dimensions:", canvas.width, canvas.height); // Debug log
+    console.log("Adjusted crop dimensions:", canvas.width, canvas.height); // Debug log
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => {
@@ -81,7 +88,11 @@ const UploadImage = () => {
 
   const handleCropComplete = async () => {
     if (completedCrop && imgRef.current) {
-      const croppedImage = await getCroppedImg(imgRef.current, completedCrop);
+      const croppedImage = await getCroppedImg(
+        imgRef.current,
+        completedCrop,
+        zoom
+      );
       setSelectedImage(croppedImage);
       setShowCropper(false);
       setZoom(1); // Reset zoom after cropping
