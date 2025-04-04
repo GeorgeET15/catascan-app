@@ -86,7 +86,7 @@ const Reports = () => {
                           report.severity_level !== "None"
                             ? "Cataract"
                             : "No Cataract",
-                        confidence: 75, // Placeholder; ideally fetch from analysis
+                        confidence: report.confidence, // Placeholder; ideally fetch from analysis
                         severity: report.severity_level,
                         feedback: report.feedback,
                         recommendation: report.recommendation || "N/A",

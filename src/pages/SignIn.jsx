@@ -7,13 +7,34 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password) => {
+    // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+    return passwordRegex.test(password);
+  };
 
   const handleSignIn = async (e) => {
     e.preventDefault();
-    if (!email.includes("@") || password.length < 6) {
-      setError("Please enter a valid email and password (min 6 characters).");
+
+    // Email validation
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address (e.g., user@domain.com)");
+      return;
+    }
+
+    // Password validation
+    if (!validatePassword(password)) {
+      setError(
+        "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number"
+      );
       return;
     }
 

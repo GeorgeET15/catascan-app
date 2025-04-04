@@ -66,7 +66,7 @@ const PreviousScans = () => {
                     latestScan.severity_level !== "None"
                       ? "Cataract"
                       : "No Cataract",
-                  confidence: latestScan.confidence || 75, // Placeholder confidence
+                  confidence: latestScan.confidence, // Placeholder confidence
                   severity: latestScan.severity_level,
                   feedback: latestScan.feedback || "No feedback available.",
                   recommendation:

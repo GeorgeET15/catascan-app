@@ -107,9 +107,9 @@ const ScanResults = () => {
             <span className="font-medium">Severity</span>
             <span
               className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                result.severity === "normal"
+                result.severity === "Normal"
                   ? "bg-green-500/20 text-green-300"
-                  : result.severity === "immature"
+                  : result.severity === "Immature"
                   ? "bg-yellow-500/20 text-yellow-300"
                   : "bg-red-500/20 text-red-300"
               }`}
