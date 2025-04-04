@@ -77,9 +77,9 @@ const SignIn = () => {
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#b3d1d6] cursor-pointer hover:text-white transition-colors"
             >
               {showPassword ? (
-                <EyeOff size={20} /> // Icon when password is visible
+                <Eye size={20} /> // Icon when password is visible
               ) : (
-                <Eye size={20} /> // Icon when password is hidden
+                <EyeOff size={20} /> // Icon when password is hidden
               )}
             </span>
           </div>

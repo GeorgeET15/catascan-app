@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaCamera, FaUpload, FaTimes } from "react-icons/fa";
-import { toast } from "react-toastify";
 import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import Navbar from "../components/Navbar";
@@ -16,6 +15,7 @@ const UploadImage = () => {
   const [userId, setUserId] = useState(null);
   const [showCropper, setShowCropper] = useState(false);
   const [zoom, setZoom] = useState(1); // Default zoom
+  const [dialog, setDialog] = useState({ isOpen: false, message: "" }); // Dialog state
   const imgRef = useRef(null);
 
   useEffect(() => {
@@ -23,7 +23,10 @@ const UploadImage = () => {
     if (storedUserId) {
       setUserId(storedUserId);
     } else {
-      toast.error("No user ID found. Please sign in or sign up.");
+      setDialog({
+        isOpen: true,
+        message: "No user ID found. Please sign in or sign up.",
+      });
       navigate("/signin");
     }
   }, [navigate]);
@@ -31,7 +34,7 @@ const UploadImage = () => {
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file && !file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+      setDialog({ isOpen: true, message: "Please select an image file" });
       return;
     }
     setImageSrc(URL.createObjectURL(file));
@@ -42,7 +45,7 @@ const UploadImage = () => {
   const handleCameraCapture = (event) => {
     const file = event.target.files[0];
     if (file && !file.type.startsWith("image/")) {
-      toast.error("Please capture an image");
+      setDialog({ isOpen: true, message: "Please capture an image" });
       return;
     }
     setImageSrc(URL.createObjectURL(file));
@@ -55,7 +58,6 @@ const UploadImage = () => {
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
 
-    // Adjust crop coordinates and dimensions based on zoom
     const adjustedCropX = (crop.x * scaleX) / zoomLevel;
     const adjustedCropY = (crop.y * scaleY) / zoomLevel;
     const adjustedCropWidth = (crop.width * scaleX) / zoomLevel;
@@ -76,8 +78,6 @@ const UploadImage = () => {
       adjustedCropWidth,
       adjustedCropHeight
     );
-
-    console.log("Adjusted crop dimensions:", canvas.width, canvas.height); // Debug log
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => {
@@ -101,11 +101,17 @@ const UploadImage = () => {
 
   const handleScan = async () => {
     if (!selectedImage) {
-      toast.error("Please upload or capture and crop an image first!");
+      setDialog({
+        isOpen: true,
+        message: "Please upload or capture and crop an image first!",
+      });
       return;
     }
     if (!userId) {
-      toast.error("User ID is missing. Please sign in again.");
+      setDialog({
+        isOpen: true,
+        message: "User ID is missing. Please sign in again.",
+      });
       return;
     }
 
@@ -153,12 +159,23 @@ const UploadImage = () => {
       navigate("/scan-results", { state: { result: predictData } });
     } catch (error) {
       console.error("Error:", error);
-      toast.error(
-        error.message || "An error occurred while scanning the image."
-      );
+      setDialog({
+        isOpen: true,
+        message: error.message || "An error occurred while scanning the image.",
+      });
     } finally {
       setLoading(false);
     }
+  };
+
+  const closeDialog = () => {
+    setDialog({ isOpen: false, message: "" });
+    // Reset the preview
+    setSelectedImage(null);
+    setImageSrc(null);
+    setShowCropper(false);
+    setZoom(1);
+    setCompletedCrop(null);
   };
 
   return (
@@ -192,7 +209,6 @@ const UploadImage = () => {
                   onLoad={(e) => (imgRef.current = e.target)}
                 />
               </ReactCrop>
-              {/* Circular Overlay */}
               <div
                 className="absolute inset-0 flex items-center justify-center pointer-events-none"
                 style={{ opacity: 0.5 }}
@@ -238,7 +254,7 @@ const UploadImage = () => {
           <div className="mt-4">
             <input
               type="range"
-              min="0.5" // Allow zooming out
+              min="0.5"
               max="3"
               step="0.1"
               value={zoom}
@@ -254,7 +270,6 @@ const UploadImage = () => {
           </div>
         )}
 
-        {/* Upload & Camera Buttons */}
         {!showCropper && !selectedImage && (
           <div className="mt-6 flex flex-col sm:flex-row gap-2 sm:gap-4">
             <label className="flex-1 bg-[#b3d1d6] text-[#0d2a34] py-3 rounded-xl flex items-center justify-center gap-2 font-semibold hover:bg-[#a1c3c8] transition-colors cursor-pointer">
@@ -282,7 +297,6 @@ const UploadImage = () => {
           </div>
         )}
 
-        {/* Scan Button */}
         {!showCropper && selectedImage && (
           <button
             onClick={handleScan}
@@ -297,6 +311,22 @@ const UploadImage = () => {
           </button>
         )}
       </div>
+
+      {/* Smaller Dialog Box */}
+      {dialog.isOpen && (
+        <div className="fixed inset-0 bg-[#1a3c40]/80 backdrop-blur-xl p-8 w-full max-w-sm shadow-lg border border-[#b3d1d6]/20 flex items-center justify-center z-50">
+          <div className="bg-[#1a3c40] p-4 rounded-xl shadow-lg border border-[#b3d1d6]/20 w-full max-w-xs">
+            <h2 className="text-md font-semibold text-[#b3d1d6] mb-2">Error</h2>
+            <p className="text-[#b3d1d6] text-sm mb-4">{dialog.message}</p>
+            <button
+              onClick={closeDialog}
+              className="w-full bg-[#b3d1d6] text-[#0d2a34] py-1.5 rounded-xl font-semibold hover:bg-[#a1c3c8] transition-colors text-sm"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       <Navbar />
     </div>
